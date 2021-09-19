@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <title> React </title>
+
+        <link rel="stylesheet" href="https://cdn.paciu.tech/framework/paciu/v1/paciu.css">
+        <link rel="stylesheet" href="https://unicons.iconscout.com/release/v3.0.3/css/line.css">
+
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-router-dom@5.2.0/umd/react-router-dom.js" crossorigin></script>
+        <script src="https://unpkg.com/redux@4/dist/redux.js" crossorigin></script>
+        <script src="https://unpkg.com/react-redux@7/dist/react-redux.js" crossorigin></script>
+        <script src="https://unpkg.com/redux-thunk@2/dist/redux-thunk.js" crossorigin></script>
+        <script src="https://unpkg.com/@babel/standalone@7.12.6/babel.js" crossorigin></script>
+
+        <!--script src="https://unpkg.com/ionicons@5/dist/ionicons/ionicons.esm.js" type="module" crossorigin></script-->
+
+        <style>
+            .paciu-link {
+                position: relative;
+            }
+            .paciu-link .resource {
+                color: rgba( 100, 100, 100, 1 );
+            }
+            .paciu-link i {
+                font-size: 18px;
+            }
+            .nav {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            .navbar {
+                position: sticky;
+            }
+            .navbar-top {
+                top: 0;
+            }
+            .navbar-bottom {
+                bottom: 0;
+            }
+
+            .navcontent {
+                overflow-y: auto;
+                height: 100%;
+            }
+
+            .link-analytic-visits {
+                height: 4px;
+                border-radius: 2px;
+                background: rgba( 240, 240, 240, 0.2 );
+                position: relative;
+                overflow: hidden;
+            }
+            .link-analytic-visits .unique-visits {
+                background: rgba( 39, 125, 255, 1 );
+                width: 0;
+                height: 100%;
+                border-radius: 2px;
+                position: absolute;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="paciu screen nav">
+            <div class="navbar navbar-top">
+                <div class="paciu row flex flex-between flex-item-center">
+                    <div class="paciu row">
+                        <h3>Paciu.Links</h3>
+                    </div>
+                    <div class="paciu row">
+                        <button class="blue hovered" modal="add-link">Create new</button>
+                    </div>
+                </div>
+                <hr>
+            </div>
+
+            <div class="navcontent">
+                <div id="root" class="paciu screen row"></div>
+                <!--div class="paciu row">
+                    <div id="paciu-app">
+
+                    </div>
+                </div-->
+            </div>
+
+            <div class="navbar navbar-bottom">
+                <div class="paciu row flex flex-center flex-item-center">
+                    <small class="paciu row">
+                        Paciu Inc. / by @paciustas
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/jsx">
+
+            const api = {
+                request ( type, url ) {
+                    return new Promise( ( resolve, reject ) => {
+                        setTimeout( () => {
+                            //reject( new Error( 'Connection error' ) )
+                            resolve([
+                                { id: 1, name: 'instagram@paciustas', uri: "clkpa.ru/bq389hfg78", resource: 'https://instagram.com/paciustas', favorite: false },
+                                { id: 2, name: 'vk@paciustas', uri: "clkpa.ru/b9hqfg7838", resource: 'https://vk.com/paciustas', favorite: false },
+                                { id: 3, name: 'behance@paciustas', uri: "clkpa.ru/qfg7b8389h", resource: 'https://behance.com/paciustas', favorite: false }
+                            ])
+                        }, 1000 )
+                    })
+                }
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            const usersInitialState = {
+                list: []
+            }
+
+            const linksInitialState = {
+                links: [],
+                loading: false,
+                loaded: false,
+                error: null
+            }
+
+            const ACTION_LOADING_LINKS_CLEAR = 'links.clear'
+
+            const ACTION_LOADING_LOTS_PENDING = 'links.loading.pending'
+            const ACTION_LOADING_LOTS_SUCCESS = 'links.loading.success'
+            const ACTION_LOADING_LOTS_ERROR = 'links.loading.error'
+
+            const ACTION_SET_LINKS = 'reduce.set.link'
+            const ACTION_ADD_LINK = 'add.link'
+            const ACTION_CHANGE_LINK_FAVORITE = 'change.link.favorite'
+
+            function linksLoadingPending () {
+                return { type: ACTION_LOADING_LOTS_PENDING }
+            }
+            function linksLoadingSuccess ( links ) {
+                return { type: ACTION_LOADING_LOTS_SUCCESS, links }
+            }
+            function linksLoadingError ( error ) {
+                return { type: ACTION_LOADING_LOTS_ERROR, error }
+            }
+            function clearLinks () {
+                return {
+                    type: ACTION_LOADING_LINKS_CLEAR
+                }
+            }
+            /*function setLinks ( list ) {
+                return { type: ACTION_SET_LINKS, list }
+            }*/
+            function changeFavorite ( id ) {
+                return { type: ACTION_CHANGE_LINK_FAVORITE, id }
+            }
+            function addLink ( link ) {
+                return { type: ACTION_ADD_LINK, link }
+            }
+
+            function usersReducer ( state = usersInitialState, action ) {
+                return state
+            }
+
+            function linksReducer ( state = linksInitialState, action ) {
+                if ( action.type === ACTION_LOADING_LINKS_CLEAR ) {
+                    return {
+                        ...state,
+                        links: [],
+                        loading: false,
+                        loaded: false,
+                        error: null
+                    }
+                }
+                if ( action.type === ACTION_LOADING_LOTS_PENDING ) {
+                    return {
+                        ...state,
+                        links: [],
+                        loading: true,
+                        loaded: false,
+                        error: null
+                    }
+                }
+                if ( action.type === ACTION_LOADING_LOTS_SUCCESS ) {
+                    return {
+                        ...state,
+                        links: action.links,
+                        loading: false,
+                        loaded: true,
+                        error: null
+                    }
+                }
+                if ( action.type === ACTION_LOADING_LOTS_ERROR ) {
+                    return {
+                        ...state,
+                        links: [],
+                        loading: false,
+                        loaded: false,
+                        error: action.error
+                    }
+                }
+                /*if ( action.type === ACTION_SET_LINKS ) {
+                    return {
+                        ...state,
+                        list: action.list
+                    }
+                }*/
+                if ( action.type === ACTION_ADD_LINK ) {
+                    state.links.push( action.link )
+                    return state
+                }
+                if ( action.type === ACTION_CHANGE_LINK_FAVORITE ) {
+                    return {
+                        ...state,
+                        links: state.links.map( link => {
+                            return {
+                                ...link,
+                                favorite: ( link.id === action.id ) ? !link.favorite : link.favorite
+                            }
+                        })
+                    }
+                }
+                return state
+            }
+
+            const thunk = ReduxThunk.default
+
+            const store = Redux.createStore(
+                Redux.combineReducers({
+                    links: linksReducer,
+                    users: usersReducer
+                }),
+                Redux.applyMiddleware( thunk.withExtraArgument({ api }) )
+            )
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            const StoreContext = React.createContext()
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            function ChangeFavorite ({ status, changeFavorite }) {
+
+                // локальное состояние внутри компнента
+                const [ enabled, changeEnabled ] = React.useState( true )
+
+
+                const onClickChangeFavorite = () => {
+                    changeEnabled( false )
+                    changeFavorite().then( () => changeEnabled( true ) ).catch( () => changeEnabled( true ) )
+                }
+
+                return status ? (
+                    <button onClick={onClickChangeFavorite} disabled={!enabled} className="red"> <i className="uil uil-thumbs-down"></i> </button>
+                ) : (
+                    <button onClick={onClickChangeFavorite} disabled={!enabled} className="blue"> <i className="uil uil-thumbs-up"></i> </button>
+                )
+            }
+
+            class Link extends React.Component { // ({ link, changeFavoriteLink })
+                render () {
+                    return (
+                        <div className="paciu row">
+                            <div className="paciu block row paciu-link">
+                                <div className="paciu flex flex-between flex-item-center">
+                                    <div className="paciu flex">
+                                        <div className="paciu row">
+                                            <RouterLink to={ '/links/' + this.props.link.id }>
+                                                <h3 className="name"> { this.props.link.name } </h3>
+                                            </RouterLink>
+                                            <small className="resource"> { this.props.link.uri } </small>
+                                        </div>
+                                    </div>
+                                    <div className="paciu flex">
+                                        <div className="paciu row">
+                                            <ChangeFavorite
+                                                status={this.props.link.favorite}
+                                                changeFavorite={ () => this.props.changeFavoriteLink( this.props.link.id ) }
+                                            />
+                                        </div>
+                                        <div className="paciu row">
+                                            <button className="blue" title="Скопировать ссылку"> <i className="uil uil-copy"></i> </button>
+                                        </div>
+                                        <div className="paciu row">
+                                            <button className="blue analytics"> <i className="uil uil-chart-line"></i> </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+            }
+
+            function changeFavoriteLinkAsync ( id ) {
+                return ( dispatch, getState, { api } ) => {
+                    return api.request( 'GET', '/links' ).then( () => {
+                        dispatch( changeFavorite( id ) )
+                    })
+                }
+            }
+
+            const linkMapDispatchToProps = {
+                changeFavoriteLink: changeFavoriteLinkAsync
+            }
+
+            const LinkConnected = ReactRedux.connect( null, linkMapDispatchToProps )( Link )
+
+
+
+            function Links ({ links, loading, loaded, error, load, unload }) {
+
+                React.useEffect(() => {
+                    if ( !loaded && !loading && error === null ) {
+                        load()
+                    }
+                }, [ loaded, loading, error ] )
+
+                React.useEffect( () => {
+                    if ( loaded || error !== null ) {
+                        return unload
+                    }
+                }, [ loaded, error ] )
+
+                if ( error !== null ) {
+                    console.log( 'error' )
+                    return (
+                        <div className="paciu row">
+                            { error.message }
+                        </div>
+                    )
+                }
+
+                if ( loading ) {
+                    return <div> Loading </div>
+                }
+
+                if ( !loaded ) {
+                    return null
+                }
+
+                console.log( 'loaded' )
+
+                const changeFavoriteLink = () => {
+
+                }
+
+                return (
+                    <div>
+                        {links.map( link => <LinkConnected key={link.id} link={link} /> )}
+                    </div>
+                )
+            }
+
+            const LinksMapStateToProps = (state) => ({
+                links: state.links.links,
+                loading: state.links.loading,
+                loaded: state.links.loaded,
+                error: state.links.error
+            })
+
+            function LinksLoadAsync () {
+                return ( dispatch, getState, { api } ) => {
+                    dispatch( linksLoadingPending() )
+                    api.request( 'GET', '/links' ).then( links => {
+                        dispatch( linksLoadingSuccess( links ) )
+                    }).catch( error => {
+                        dispatch( linksLoadingError( error ) )
+                    })
+                }
+            }
+
+            const LotsMapDispatchToProps = {
+                load: LinksLoadAsync,
+                unload: clearLinks
+            }
+
+            const LinksConnected = ReactRedux.connect( LinksMapStateToProps, LotsMapDispatchToProps )( Links )
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            const RouterContext = React.createContext()
+
+            function matchPath ( location, params ) {
+                const regexp = new RegExp(
+                    params.exact
+                        ? '^' + params.path + '$'
+                        : '^' + params.path + '(/.*)?'
+                )
+                return regexp.exec( location )
+            }
+
+            function useParams () {
+                const router = React.useContext( RouterContext )
+                return router.match.groups
+            }
+
+            function Router ({ children }) {
+                const [ location, setLocation ] = React.useState(
+                    window.location.hash.slice( 1 ) || '/'
+                )
+                React.useEffect( () => {
+                    const listener = () => {
+                        setLocation( window.location.hash.slice( 1 ) )
+                    }
+                    window.addEventListener( 'hashchange', listener, false )
+                    return () => {
+                        window.removeEventListener( 'hashchange', listener )
+                    }
+                }, [ setLocation ] )
+                const navigate = ( location ) => {
+                    window.location.hash = location
+                }
+                const createHref = ( path ) => {
+                    return '#' + path
+                }
+                return (
+                    <RouterContext.Provider
+                        value={{ location, navigate, createHref }}
+                        children={children}
+                    />
+                )
+            }
+
+            function RouterLink ( { to, children, ...options } ) {
+                return <RouterContext.Consumer>
+                    {( value) => {
+                        const href = to ? value.createHref( to ) : ''
+                        const onClick = ( event ) => {
+                            event.preventDefault()
+                            value.navigate( to )
+                        }
+                        return <a href={href} onClick={onClick} {...options}>{children}</a>
+                    }}
+                </RouterContext.Consumer>
+            }
+
+            function Route ( props ) {
+                return <RouterContext.Consumer>
+                    {( value ) => {
+                        const match = props.computedMatch
+                            ? props.computedMatch
+                            : matchPath( value.location, props )
+                        if ( match ) {
+                            return <RouterContext.Provider
+                                value={{
+                                    ...value,
+                                    match
+                                }}
+                                children={props.children}
+                            />
+                        }
+                        return null
+                    }}
+                </RouterContext.Consumer>
+            }
+
+            function Switch ({ children }) {
+                return (
+                    <RouterContext.Consumer>
+                        {( value ) => {
+                            for ( const child of children ) {
+                                const match = matchPath( value.location, child.props )
+                                if ( match ) {
+                                    return React.cloneElement( child, { computedMatch: match }   )
+                                    /*return {
+                                        ...child,
+                                        props: {
+                                            ...child.props,
+                                            computedMatch: match
+                                        }
+                                    }*/
+                                }
+                            }
+                            return null
+                        }}
+                    </RouterContext.Consumer>
+                )
+            }
+
+            function LinkPage () {
+                const params = useParams()
+                return (
+                    <div>
+                        <h1>One link {params.id}</h1>
+                    </div>
+                )
+
+            }
+
+            function App () {
+
+                return (
+                    <Router>
+                        <div className="app">
+
+                            <ul>
+                                <li> <RouterLink to="/">Main</RouterLink> </li>
+                                <li> <RouterLink to="/links">Links</RouterLink> </li>
+                            </ul>
+
+                            <div>
+                                <Switch>
+                                    <Route path="/" exact>
+                                        <h1>Hello</h1>
+                                    </Route>
+                                    <Route path="/links" exact>
+                                        <LinksConnected />
+                                    </Route>
+                                    <Route path="/links/(?<id>[\w-]+)" exact>
+                                        <LinkPage />
+                                    </Route>
+                                    <Route path=".*">
+                                        Not found
+                                    </Route>
+                                </Switch>
+                            </div>
+
+                        </div>
+                    </Router>
+                )
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            ReactDOM.render(
+                <ReactRedux.Provider store={store}>
+                    <App />
+                </ReactRedux.Provider>,
+                document.getElementById( 'root' )
+            )
+
+            /*setTimeout( () => {
+                store.dispatch( addLink( { id: 4, name: 'facebook@paciustas', uri: "clkpa.ru/7838bqfg9h", resource: 'https://facebook.com/paciustas', favorite: false } ) )
+            }, 2000 )*/
+
+
+
+
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            /*function functionalActionSupport ({ dispatch }) {
+            	return function ( next ) {
+            		return function ( action ) {
+            			if ( typeof action === 'function' ) {
+            				return action( dispatch )
+            			}
+            			return next( action )
+            		}
+            	}
+        	}*/
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            /*function Connect ( mapStateToProps, mapDispatchToProps ) {
+                return ( Component ) => {
+                    return ( props ) => {
+                        return (
+                            <StoreContext.Consumer>
+                                {(store) => {
+                                    return React.createElement(
+                                        class extends React.Component {
+                                            render () {
+                                                const stateToProps = mapStateToProps ? mapStateToProps( store.getState() ) : {}
+                                                const dispatchToProps = mapDispatchToProps ? mapDispatchToProps( store.dispatch ) : {}
+                                                return (
+                                                    <Component
+                                                        {...this.props}
+                                                        {...stateToProps}
+                                                        {...dispatchToProps}
+                                                    />
+                                                )
+                                            }
+                                            componentDidMount () {
+                                                this.unsubscribe = store.subscribe( this.forceUpdate.bind( this ) )
+                                            }
+                                            componentWillUnmount () {
+                                                this.unsubscribe()
+                                            }
+                                        }, props
+                                    )
+                                }}
+                            </StoreContext.Consumer>
+                        )
+                    }
+                }
+
+            }*/
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            /*class Store {
+                constructor ( reducer, initialState ) {
+                    this.reducer = reducer
+                    this.state = reducer( initialState, { type: null } )
+                    this.listeners = []
+                }
+                getState () {
+                    return this.state
+                }
+                subscribe ( callback ) {
+                    this.listeners.push( callback )
+                    return () => {
+                        const index = this.listeners.indexOf( listener )
+                        this.listeners.splice( index, 1 )
+                    }
+                }
+                dispatch ( action ) {
+                    this.state = this.reducer( this.state, action )
+                    this.listeners.forEach( listener => listener() )
+                }
+            }
+
+            function combineReducers ( reducers ) {
+                return ( state = {}, action ) => {
+                    const result = {}
+                    Object.entries( reducers ).forEach(([ key, reducer ]) => {
+                        result[ key ] = reducer( state[ key ], action )
+                    })
+                    return result
+                }
+            }*/
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            /*const VDom = {
+                createElement: ( type, config, ...children ) => {
+                    const props = config || {}
+                    const key = props.key ? props.key : null
+                    if ( children.length === 1 ) {
+                        props.children = children[ 0 ]
+                    } else {
+                        props.children = children
+                    }
+                    return { type, key, props }
+                }
+            }
+
+            const render = ( virtualDom, realDomRoot ) => {
+
+                let evaluatedVirtualDom = evaluate( virtualDom )
+
+                let virtualDomRoot = {
+                    type: realDomRoot.tagName.toLowerCase(),
+                    props: {
+                        id: realDomRoot.id,
+                        ...realDomRoot.attributes,
+                        children: [
+                            evaluatedVirtualDom
+                        ]
+                    }
+                }
+                sync( virtualDomRoot, realDomRoot )
+            }
+
+            function evaluate ( virtualNode ) {
+                if ( typeof virtualNode !== 'object' ) {
+                    return virtualNode
+                }
+                if ( typeof virtualNode.type === 'function' ) {
+                    return evaluate( (virtualNode.type)(virtualNode.props) )
+                }
+
+                let props = virtualNode.props || {}
+
+                return {
+                    ...virtualNode,
+                    props: {
+                        ...props,
+                        children: Array.isArray( props.children ) ? props.children.map( evaluate ) : [ evaluate(props.children) ]
+                    }
+                }
+            }
+
+            const sync = ( virtualNode, realNode ) => {
+
+                // Sync element
+
+                if ( virtualNode.props ) {
+                    Object.entries( virtualNode.props ).forEach( ([ name, value ]) => {
+                        if ( name === 'children' || name === 'key' ) {
+                            return
+                        }
+                        if ( realNode[ name ] !== value ) {
+                            realNode[ name ] = value
+                        }
+                    })
+                }
+
+                if ( virtualNode.key ) {
+                    realNode.dataset.key = virtualNode.key
+                }
+
+                if ( typeof virtualNode !== 'object' && virtualNode !== realNode.nodeValue ) {
+                    realNode.nodeValue = virtualNode
+                }
+                // Sync child node
+
+                let virtualChildren = virtualNode.props ? virtualNode.props.children || [] : []
+                let realChildren = realNode.childNodes
+
+                for ( let i = 0; i < virtualChildren.length || i < realChildren.length; i++ ) {
+                    let virtual = virtualChildren[ i ]
+                    let real = realChildren[ i ]
+
+                    // Remove
+                    if ( virtual === undefined && real !== undefined ) {
+                        realNode.remove( real )
+                    }
+
+                    // Update
+                    if ( virtual !== undefined && real !== undefined && ( virtual.type || '' ) === ( real.tagName || '' ).toLowerCase() ) {
+                        sync( virtual, real )
+                    }
+
+                    // Replace
+                    if ( virtual !== undefined && real !== undefined && ( virtual.type || '' ) !== ( real.tagName || '' ).toLowerCase() ) {
+                        let newReal = cretaeRealNodeByVirtual( virtual )
+                        sync( virtual, newReal )
+                        realNode.replaceChild( newReal, real )
+                    }
+
+                    // Add
+                    if ( virtual !== undefined && real === undefined ) {
+                        let newReal = cretaeRealNodeByVirtual( virtual )
+                        sync( virtual, newReal )
+                        realNode.appendChild( newReal )
+                    }
+                }
+
+
+                //console.log( virtualNode, realNode )
+            }
+
+            function cretaeRealNodeByVirtual ( virtualNode ) {
+                if ( typeof virtualNode !== 'object' ) {
+                    return document.createTextNode( '' )
+                }
+                return document.createElement( virtualNode.type )
+            }*/
+
+        </script>
+    </body>
+</html>
